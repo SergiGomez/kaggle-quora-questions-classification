@@ -1,0 +1,13 @@
+{
+  "id": "sergigp/kernel-quora-sergi",
+  "title": "Kernel Quora Sergi",
+  "code_file": "exec_all.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": "true",
+  "enable_gpu": "false",
+  "enable_internet": "false",
+  "dataset_sources": [],
+  "competition_sources": ['quora-insincere-questions-classification'],
+  "kernel_sources": []
+}
