@@ -22,66 +22,6 @@ from keras.callbacks import *
 from sklearn.model_selection import train_test_split, StratifiedKFold
 from sklearn import metrics
 
-def EDA(df):
-
-    print('\n-- EDA --')
-    t0 = time.time()
-    nwords = df['question_text'].str.split().str.len()
-    print('\tMaximum number of words per question: ', nwords.max())
-    print("-- EDA done: %s sec --" % np.round(time.time() - t0,1))
-
-def preprocess_data(df, params_embedding):
-
-    puncts = [',', '.', '"', ':', ')', '(', '-', '!', '?', '|', ';', "'", '$', '&', '/', '[', ']', '>', '%', '=', '#', '*', '+', '\\', '•',  '~', '@', '£', 
- '·', '_', '{', '}', '©', '^', '®', '`',  '<', '→', '°', '€', '™', '›',  '♥', '←', '×', '§', '″', '′', 'Â', '█', '½', 'à', '…', 
- '“', '★', '”', '–', '●', 'â', '►', '−', '¢', '²', '¬', '░', '¶', '↑', '±', '¿', '▾', '═', '¦', '║', '―', '¥', '▓', '—', '‹', '─', 
- '▒', '：', '¼', '⊕', '▼', '▪', '†', '■', '’', '▀', '¨', '▄', '♫', '☆', 'é', '¯', '♦', '¤', '▲', 'è', '¸', '¾', 'Ã', '⋅', '‘', '∞', 
- '∙', '）', '↓', '、', '│', '（', '»', '，', '♪', '╩', '╚', '³', '・', '╦', '╣', '╔', '╗', '▬', '❤', 'ï', 'Ø', '¹', '≤', '‡', '√', ]
-
-    def clean_text(x):
-        x = str(x)
-        for punct in puncts:
-            x = x.replace(punct, " %s " % (punct))
-        return x
-
-    print('\n-- Data Pre-processing --', flush = True)
-    t0 = time.time()
-
-    # cleaning the text
-    df['question_text'] = df['question_text'].apply(lambda x: clean_text(x))
-
-    # Fill up the missing values
-    all_sentences = df['question_text'].fillna("_na_").values
-
-    # Index number for the training set
-    ind_train = df.loc[df['set'] == 'train'].shape[0]
-
-    # 1) Word to integer: tokenize the data into a format that
-    # can be used by the word embeddings. For that, we use the Tokenizer utility class
-    # which can vectorize a text corpus into a list of integers
-    tokenizer = Tokenizer(num_words = params_embedding['vocab_size'])
-    tokenizer.fit_on_texts(list(all_sentences))
-    X = tokenizer.texts_to_sequences(all_sentences)
-    # We pad the input so that all vectors will have the same length
-    X = pad_sequences(X, maxlen = params_embedding['maxlen'])
-
-    # Training set pre-processed
-    train_X = X[0:ind_train]
-    train_sentences = all_sentences[0:ind_train]
-
-    print('\t Length of Training vector: ', len(train_X))
-    # Test set pre-processed
-    test_X = X[ind_train:]
-    print('\t Length of Test vector: ', len(test_X))
-
-    # Target of the training set
-    #train_y = df.loc[df['set'] == 'train']['target'].values
-    train_y = df['target'].values[0:ind_train]
-
-    print("-- Pre-processing done: %s sec --" % np.round(time.time() - t0,1))
-
-    return train_X, train_y, test_X, tokenizer, train_sentences
-
 def train_pred(X, y, test_X, params_embedding, params_model, tokenizer, train_sentences):
 
     t0 = time.time()
@@ -627,7 +567,69 @@ class CyclicLR(Callback):
             self.history.setdefault(k, []).append(v)
         
         K.set_value(self.model.optimizer.lr, self.clr())
-        
+
+	
+def EDA(df):
+
+    print('\n-- EDA --')
+    t0 = time.time()
+    nwords = df['question_text'].str.split().str.len()
+    print('\tMaximum number of words per question: ', nwords.max())
+    print("-- EDA done: %s sec --" % np.round(time.time() - t0,1))
+
+def preprocess_data(df, params_embedding):
+
+    puncts = [',', '.', '"', ':', ')', '(', '-', '!', '?', '|', ';', "'", '$', '&', '/', '[', ']', '>', '%', '=', '#', '*', '+', '\\', '•',  '~', '@', '£', 
+ '·', '_', '{', '}', '©', '^', '®', '`',  '<', '→', '°', '€', '™', '›',  '♥', '←', '×', '§', '″', '′', 'Â', '█', '½', 'à', '…', 
+ '“', '★', '”', '–', '●', 'â', '►', '−', '¢', '²', '¬', '░', '¶', '↑', '±', '¿', '▾', '═', '¦', '║', '―', '¥', '▓', '—', '‹', '─', 
+ '▒', '：', '¼', '⊕', '▼', '▪', '†', '■', '’', '▀', '¨', '▄', '♫', '☆', 'é', '¯', '♦', '¤', '▲', 'è', '¸', '¾', 'Ã', '⋅', '‘', '∞', 
+ '∙', '）', '↓', '、', '│', '（', '»', '，', '♪', '╩', '╚', '³', '・', '╦', '╣', '╔', '╗', '▬', '❤', 'ï', 'Ø', '¹', '≤', '‡', '√', ]
+
+    def clean_text(x):
+        x = str(x)
+        for punct in puncts:
+            x = x.replace(punct, " %s " % (punct))
+        return x
+
+    print('\n-- Data Pre-processing --', flush = True)
+    t0 = time.time()
+
+    # cleaning the text
+    df['question_text'] = df['question_text'].apply(lambda x: clean_text(x))
+
+    # Fill up the missing values
+    all_sentences = df['question_text'].fillna("_na_").values
+
+    # Index number for the training set
+    ind_train = df.loc[df['set'] == 'train'].shape[0]
+
+    # 1) Word to integer: tokenize the data into a format that
+    # can be used by the word embeddings. For that, we use the Tokenizer utility class
+    # which can vectorize a text corpus into a list of integers
+    tokenizer = Tokenizer(num_words = params_embedding['vocab_size'])
+    tokenizer.fit_on_texts(list(all_sentences))
+    X = tokenizer.texts_to_sequences(all_sentences)
+    # We pad the input so that all vectors will have the same length
+    X = pad_sequences(X, maxlen = params_embedding['maxlen'])
+
+    # Training set pre-processed
+    train_X = X[0:ind_train]
+    train_sentences = all_sentences[0:ind_train]
+
+    print('\t Length of Training vector: ', len(train_X))
+    # Test set pre-processed
+    test_X = X[ind_train:]
+    print('\t Length of Test vector: ', len(test_X))
+
+    # Target of the training set
+    #train_y = df.loc[df['set'] == 'train']['target'].values
+    train_y = df['target'].values[0:ind_train]
+
+    print("-- Pre-processing done: %s sec --" % np.round(time.time() - t0,1))
+
+    return train_X, train_y, test_X, tokenizer, train_sentences
+
+# Main code
 exec_type =  'azure'#'ec2' 
 
 import init_params
